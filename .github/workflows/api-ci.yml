@@ -1,22 +1,21 @@
 name: API CI
-# on: [push] asi es para monorepos, pero como tenemos varias carpetas con cosas distintas, lo hacemos asi:
+
+#on: [push]
 on:
   push:
     paths:
       - "./api/**"
       - ".github/workflows/api-ci.yml"
 
+
 defaults:
   run:
     working-directory: ./api
 
-#desde aqui si es para los dos casos
-#aqui especificaremos a github que corra todo nuestro proyecto en una maquina que el nos dara
 jobs:
   unit-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      #aqui es para que en esa maquina imaginaria que hace github, clone nuestro repositorio
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Nodejs
