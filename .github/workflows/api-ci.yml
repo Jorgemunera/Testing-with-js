@@ -1,22 +1,38 @@
 name: API CI
-# on: [push] asi es para monorepos, pero como tenemos varias carpetas con cosas distintas, lo hacemos asi:
+
+#on: [push]
 on:
   push:
     paths:
       - "./api/**"
       - ".github/workflows/api-ci.yml"
 
+
 defaults:
   run:
     working-directory: ./api
 
-#desde aqui si es para los dos casos
-#aqui especificaremos a github que corra todo nuestro proyecto en una maquina que el nos dara
 jobs:
-  unit-test:
-    runs-on: ubuntu-20.04
+  linter:
+    runs-on: ubuntu-latest
     steps:
-      #aqui es para que en esa maquina imaginaria que hace github, clone nuestro repositorio
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Nodejs
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: 'npm'
+          cache-dependency-path: ./api/package-lock.json
+      - name: install
+        shell: bash
+        run: npm ci
+      - name: run linter
+        shell: bash
+        run: npm run lint
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Nodejs
@@ -31,3 +47,29 @@ jobs:
       - name: run unit test
         shell: bash
         run: npm run test
+  e2e:
+    runs-on: ubuntu-latest
+    container:
+      image: node:14
+
+    services:
+      mongo-e2e:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: test
+          MONGO_INITDB_ROOT_PASSWORD: test123
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: install
+        shell: bash
+        run: npm ci
+      - name: run e2e
+        shell: bash
+        run: npm run test:e2e
+        env:
+          MONGO_DB_NAME: demo
+          MONGO_URL: mongodb://e2e:e2e123@localhost:27018?retryWrites=true&writeConcern=majority
